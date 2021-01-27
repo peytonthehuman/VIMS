@@ -1,0 +1,77 @@
+<script>
+var package = ['',false];
+/* anum, debug */
+var inputElems;
+/* anum */
+var outputElems = [];
+/* numActiveOut, activeOutIndex, UID, notes, duedate */
+var activeOut = [];
+var index = 0;
+var custconsole;
+console.info('Loading...');
+
+window.onload = function() {
+  inputElems = document.getElementById('anum');
+  
+  outputElems.push(document.getElementById('numActiveOut'));
+  outputElems.push(document.getElementById('activeOutIndex'));
+  outputElems.push(document.getElementById('UID'));
+  outputElems.push(document.getElementById('notes'));
+  outputElems.push(document.getElementById('duedate'));
+  
+  custconsole = document.getElementById('console');
+  
+  reset();
+}
+
+async function custalert(msg) {
+  custconsole.value = msg;
+}
+
+async function onSuccess(retPackage) {
+  console.info(retPackage);
+  activeOut = retPackage;
+  index = activeOut.length - 1;
+  outputElems[0].value = activeOut.length;
+  next();
+}
+
+async function onFailure() {
+  for(i = 0; i < outputElems.length; i++) {
+    outputElems[4].value = "There has been an error.";
+  }
+  
+  custalert("The Inventory Processor seems to have suffered an issue and was unable to complete processing.\n\nPlease contact the supervisor immediately.");
+}
+
+async function launch(inValue) {
+  switch(inValue) {
+    case 1:
+    package[1] = true;
+    case 0:
+    package[0] = inputElems.value;
+    console.info(package);
+    google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFailure).searchRecordAnum(package);
+    break;
+  }
+}
+
+async function next() {
+  index = (index + 1) % activeOut.length;
+  outputElems[1].value = index + 1;
+  outputElems[2].value = activeOut[index][0];
+  outputElems[3].value = activeOut[index][1];
+  outputElems[4].value = activeOut[index][2];
+}
+
+async function reset() {
+  inputElems.value = '';
+  index = 0;
+  activeOut = [];
+  outputElems[0].value = '0';
+  outputElems[1].value = index + 1;
+  outputElems[2].value = '';
+  outputElems[3].value = '';
+  outputElems[4].value = '';
+}
+</script>

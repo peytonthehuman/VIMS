@@ -1,0 +1,192 @@
+<style>
+#variables {
+  --red-norm: #cf0f42;
+  --red-dark: #a40530;
+  --dash-grey: #BCC6CC;
+}
+
+button {
+  width: 140px;
+  height: 60px;
+  margin: 10px;
+  background-color: #FFFFFF;
+  color: black;
+  border: 2px solid var(--red-norm);
+  border-radius: 5px;
+  transition-duration: 0.2s;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  user-select: none;
+}
+
+button:hover,
+botton:focus {
+  background-color: var(--red-norm);
+  border-color: var(--red-dark);
+  font-weight: 600;
+  color: white;
+}
+
+button:active {
+  background-color: var(--red-dark);
+  border-color: var(--red-dark);
+  font-weight: 600;
+  color: white;
+}
+
+#container {
+  width: 580px;
+  border: 1px solid var(--dash-grey);
+  background-color: white;
+}
+
+#header {
+  display: flex;
+  height: 10%;
+  width: 100%;
+  border-bottom: 4px solid black;
+}
+
+#logo {
+  height: 40px;
+  margin: 10px;
+  user-select: none;
+}
+
+#title {
+  border-left: 1px solid var(--dash-grey);
+  margin: 10px;
+  padding: 20px 0px 2px 12px;
+  height: 20px;
+  width: 50%;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 500;
+  font-size: 21px;
+  user-select: none;
+}
+
+#main {
+  display: flex;
+  width: 100%;
+}
+
+#left {
+  width: 65%;
+  padding: 0px 10px 0px 0px;
+  margin: 3%;
+}
+
+#buttons-left {
+  padding-bottom: 20px;
+}
+
+.sectionhead {
+  color: var(--red-norm);
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  user-select: none;
+  padding-bottom: 3px;
+  margin-bottom: 7px;
+  border-bottom: 1px solid var(--dash-grey);
+}
+
+.entry {
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  user-select: none;
+}
+
+div.entry input.entry,
+div.entry textarea {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 95%;
+  border: 1px solid var(--dash-grey);
+  border-radius: 3px;
+  padding: 3px 5px 3px 5px;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 100;
+  font-size: 14px;
+}
+
+#2wdiv,
+#eosdiv,
+#custdatediv,
+#damageddiv {
+  padding: 0px 0px 5px 5px;
+  font-size: 14px;
+}
+
+.dateentry {
+  padding: 10px 0px 5px 10px;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 100;
+  font-size: 14px;
+}
+
+span.dateentry input {
+  padding: 5px;
+  width: 30px;
+  border: 1px solid var(--dash-grey);
+  border-radius: 3px;
+  text-align: center;
+}
+
+.columns {
+  padding: 4px 15px;
+}
+
+.split {
+  columns: 2;
+  padding-bottom: 30px;
+}
+
+.columnlabel {
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  border-bottom: 1px solid var(--dash-grey);
+  padding-bottom: 2px;
+  margin-bottom: 5px;
+}
+
+#checkin {
+  padding-left: 20px;
+  border-left: 1px solid var(--dash-grey);
+}
+
+#damageDesc {
+  height: 100px;
+  text-align: left;
+}
+
+#right {
+  width: 35%;
+  border-left: 1px solid var(--dash-grey);
+}
+
+#status-lights {
+  margin: 5px 0px 10px 0px;
+  padding-bottom: 6px;
+  height: 10%;
+  columns: 3;
+}
+
+.indicator {
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid var(--dash-grey);
+  margin: 0px auto;
+  padding: 7px 5px 5px 5px;
+  border-radius: 3px;
+  width: 50%;
+  height: 50%;
+  user-select: none;
+}
+
+</style>

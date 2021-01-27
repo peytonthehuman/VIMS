@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<?!= include('gui_wait_CSS'); ?>
+<div id="variables">
+  <div id="container">
+    <div id="header">
+      <!-- Logo line here <img src="" > -->
+      <div id="title">
+        Vault Record Lookup
+      </div>
+    </div>
+    <div id="main">
+      <div id="left">
+        <div id="buttons-left">
+          <div class="sectionhead">
+            Info Entry
+          </div>
+          <div class="entry">
+            Enter A-Number:<br>
+            <input type="text" id="anum">
+          </div>
+        </div>
+        <div id="inforeturn">
+          <div class="sectionhead">
+            Info Return
+          </div>
+          <div class="entry">
+            Number of Active Checkouts:
+            <input type="text" class="retVal" id="numActiveOut" readonly=true value="0">
+          </div>
+          <div class="entry">
+            Active Checkout Number:
+            <input type="text" class="retVal" id="activeOutIndex" readonly=true value="0">
+          </div>
+          <div class="entry">
+            UID:
+            <input type="text" class="retVal" id="UID" readonly=true>
+          </div>
+          <div class="entry">
+            Checkout Notes:
+            <input type="text" class="retVal" id="notes" readonly=true>
+          </div>
+          <div class="entry">
+            Current Duedate for Item:
+            <input type="text" class="retVal" id="duedate" readonly=true>
+          </div>
+        </div>
+      </div>
+      <div id="right">
+        <div class="columns">
+          <button type="button" onclick="reset()">
+            Reset
+          </button>
+          <button type="button" onclick="launch(1)">
+            Debug
+          </button>
+          <button type="button" onclick="launch(0)">
+            Go!
+          </button>
+          <button type="button" onclick="next()">
+            Goto Next Item
+          </button>
+          <div class="entry">
+            <textarea id="console" cols="20" rows="7" readonly="true"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<?!= include('gui_search_Java'); ?>

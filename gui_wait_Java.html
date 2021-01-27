@@ -1,0 +1,276 @@
+<script>
+// Package sent to backend code on submission
+var package = ['','',false,'','','',false];
+/* empname, uid, uidcatflag, cusname, cusanum, cusemail, debug */
+
+// This is an array of DOM elements that represent the various form fields of the GUI.
+var inputElems = [];
+/* empname, uid, uidcat, cardscan, cusname, cusanum, cusemail */
+
+// This is an array of DOM elements that represent the various output elements.
+var outputElems = [];
+/* uidinval, uidnfsc, uidavail */
+
+console.info('Loading...');
+
+// This value is used by the program to make sure the user has checked the UID before registering a new modification
+var checkedUID = false;
+
+// This value is used by the program to make sure the student is cleared to check out items.
+var studentValid = false;
+
+// This value is used by the program to list the possible item categories that can be reserved.
+var cats;
+
+// This is the initialization function. It saves the appropriate values to each of the global variables.
+window.onload = function() {
+  inputElems.push(document.getElementById('empname'));
+  inputElems.push(document.getElementById('UID'));
+  inputElems.push(document.getElementById('UIDCat'));
+  inputElems.push(document.getElementById('cardscan'));
+  inputElems.push(document.getElementById('cusname'));
+  inputElems.push(document.getElementById('cusanum'));
+  inputElems.push(document.getElementById('cusemail'));
+  
+  outputElems.push(document.getElementById('UIDInval'));
+  outputElems.push(document.getElementById('UIDNFSC'));
+  outputElems.push(document.getElementById('UIDavail'));
+  
+  custconsole = document.getElementById('console');
+  
+  google.script.run.withSuccessHandler(catPopSuccess).withFailureHandler(catPopFail).waitListAppOnLoad();
+}
+
+// Success handler for whyNFSCUID backend function.
+// When the whyNFSCUID function returns successfully, this function writes the NFSC reason to the feedback console.
+// If the string is blank, the system writes a default value.
+// The language can be changed here if desired.
+async function getWhy(retWhy) {
+  var alertString = "The UID you've entered is not for student checkout.\nReason: ";
+  if(retWhy === "") {
+    alertString += "No reason given.";
+  } else {
+    alertString += retWhy;
+  }
+  alertString += "\nYou may proceed with the checkout only with faculty approval.";
+  custalert(alertString);
+}
+
+// This function writes a new message to the feedback console
+async function custalert(msg) {
+  custconsole.value = msg;
+}
+
+// This function is run as the success handler for the waitListAppOnLoad external function. 
+async function catPopSuccess(retPackage) {
+console.log(retPackage);
+  for(var i = 0; i < retPackage.length; i++) {
+    var tempOpt = document.createElement("option");
+    tempOpt.text = retPackage[i][1];
+    inputElems[2].options.add(tempOpt);
+  }
+  inputElems[2].remove(0);
+  cats = retPackage;
+}
+
+// This function runs as the failure handler for the category population function
+// The language can be changed if desired
+async function catPopFail() {
+  alert("VIMS has failed during category population.\n\nPlease contact the supervisor immediately.");
+}
+
+// This function runs as the success handler for the waiting list submission external function
+// The language can be changed if desired.
+async function onSuccess(retPackage) {
+  custalert("The student has been added to the waiting list. Tell them to watch their email for a notification that the item has become available.");
+  studentValid = false;
+  checkedUID = false;
+}
+
+// This function runs as a generic failure handler
+// The language can be changed if desired.
+async function onFailure() {
+  custalert("The Inventory Processor seems to have suffered an issue and was unable to complete processing.\n\nPlease contact the supervisor immediately.");
+}
+
+// This function runs as the success handler for the validateUID external funcition.
+// The resulting retpackage value is used to determine which behavior case should be run
+// If the package is 3, 2, or 4, then the UID is valid to be reserved
+//   However if the retPackage is 4 then the item is NFSC and the whyNFSCUID function is run
+// If the retpackage is 0, then the unit is available and a message will be displayed
+// If the retpackage is 1 the UID is invalid.
+// The language can be changed if desired. Additionally the behavior of when the checkedUID value is set to true can be changed as well.
+async function onUIDSuccess(retPackage) {
+  console.info(retPackage);
+  if(retPackage == 3 || retPackage == 2 || retPackage == 4) {
+    checkedUID = true;
+    if(retPackage == 4) {
+      google.script.run.withSuccessHandler(getWhy).whyNFSCUID(inputElems[1].value);
+    } else {
+      custalert("No problems with UID. You may continue.");
+    }
+  } else if(retPackage == 0) {
+    checkedUID = true;
+    setOut(true, 2);
+    custalert("This unit is available. Unless specifically requested, please check out the available item to a student.");
+  } else if(retPackage == 1) {
+    setOut(true, 0);
+  }
+}
+
+// This function runs as a success handler for the checkRecord function
+// The external function checks to see if the student is allowed to check out an item
+// When it returns, the function checks the retPackage flags to see what the student's status is, and writes a message indicating the status
+async function validSuccess(retPackage) {
+  // Can they check out?
+  if(retPackage[5]) {
+    custalert("This student may not check out any new items from the Vault without permission from the supervisor. They may contact the supervisor if they have any questions.");
+  } else if(retPackage[4]) {
+    custalert("The student cannot check out any new items because their account is held.");
+  }
+  else if(retPackage[3]!=0) {
+    var alertString = "The student cannot check out any new items because they have ";
+    alertString += retPackage[3];
+    alertString += " items late.";
+  	custalert(alertString);
+  }
+  else {
+    custalert("The student is allowed to check out items. Please press \"Go\" again to continue with the checkout.");
+    studentValid = true;
+  }
+}
+
+// This function "turns on" or "turns off" the indicator lights on the gui form.
+// Only thing that can really be changed here are the colors
+function setOut(to, index) {
+	if(to) {
+  	outputElems[index].style.backgroundColor = '#ffc535';
+		outputElems[index].style.color = 'white';
+  } else {
+  	outputElems[index].style.backgroundColor = 'white';
+		outputElems[index].style.color = 'black';
+  }
+}
+
+// This function does a regular expression check on an input value based on the provided type
+// ANO indicates that the value should be a A Number, and the pattern is based off the expected A Number pattern. If this pattern is ever changed, this check will need to be changed.
+// CSR indicates a card scan. However, more recent cards have not followed this pattern, so this may need to be changed.
+function checkRegex(value, type) {
+  if(type == 'ANO') {
+    return /\d{8}/.test(value);
+  } else if(type == 'CSR') {
+    return;
+  }
+  return false;
+}
+
+async function launch(inValue) {
+console.log(inValue);
+  switch(inValue) {
+    case 0:
+    /* empname, uid, uidcatflag, cusname, cusanum, cusemail, debug */
+    
+    /* empname, uid, uidcat, cardscan, cusname, cusanum, cusemail */
+    checkedUID = true;
+    package[6] = true;
+    case 1:
+    // Check if UID has been validated
+    if(!checkedUID) {
+      custalert("You must validate a Unit ID before submitting this form.");
+      break;
+    }
+    // check if everything is filled
+    if(!inputElems[0].value) {
+      custalert("Input Element 1 is empty! Please make sure all required elements are filled.");
+      return;
+    }
+    package[0] = inputElems[0].value;
+    
+    for(var i = 4; i < 7; i++) {
+      if(!inputElems[i].value) {
+        custalert("Input Element " + (i + 1) + " is empty! Please make sure all required elements are filled.");
+        return;
+      }
+      if(i == 5) {
+        if(!checkRegex(inputElems[i].value, 'ANO')) {
+          custalert("Inputed A# Number is not valid! Please make sure to enter A# Numbers as: \"########\"");
+          return;
+        }
+      }
+      if(i == 0) {
+        package[i] = inputElems[i].value;
+      } else {
+        package[i - 1] = inputElems[i].value;
+      }
+    }
+    
+    var tempUID = getUID();
+    package[1] = tempUID[0];
+    package[2] = tempUID[1];
+    package[7] = inputElems[2].value;
+      
+    // if is call main function
+    console.info(package);
+    if(!studentValid) {
+      custconsole.value = "";
+      google.script.run.withSuccessHandler(validSuccess).withFailureHandler(onFailure).checkRecord([package[3], package[4]]);
+    }
+    if(studentValid || package[6] == true) {
+      package[6] = false;
+      google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFailure).waitListAppOnSubmit(package);
+    }
+    break;
+    case 2:
+    var uidinfo = getUID();
+    google.script.run.withSuccessHandler(onUIDSuccess).withFailureHandler(onFailure).validateUID(uidinfo[0],uidinfo[1]);
+    break;
+  }
+}
+
+// This function calculates the appropriate package to send to the backend UID checker fucntion.
+// It uses a lookup table to determine the correct UID preamble to send to the backend, and pushes a true flag to indicate it should be checked by category
+// If a full UID has been entered, then it will send the full UID with a false parameter to indicate a full UID has been sent.
+function getUID() {
+  var uidpack = [];
+  console.log(cats);
+  if(inputElems[1].value === "") {
+    for(var i = 0; i < cats.length; i++) {
+      if(cats[i][1] == inputElems[2].value) {
+        uidpack.push(cats[i][0]);
+        uidpack.push(true);
+      }
+    }
+    if(uidpack.length == 0) {
+      custalert("error: cat not correct in gui!");
+    }
+  } else {
+    uidpack.push(inputElems[1].value);
+    uidpack.push(false);
+  }
+  console.log(uidpack);
+  return uidpack;
+}
+
+// This function resets the entire form, and is called by the reset button.
+async function reset() {
+  for(i = 1; i < 7; i++) {
+    if(i != 2) {
+      inputElems[i].value = '';
+    }
+  }
+  
+  for(i = 0; i < 3; i++) {
+    setOut(false, i);
+  }
+}
+
+// This function scans the value returned by the card reader and attempts to write the determined values to the form
+function autoFillFields() {
+  var raw = inputElems[7].value;
+  if(checkRegex(raw, "CSR")==false) {
+    custalert("The scanned ID card is not in a recognized format. Please contact Peyton.");
+  } else {
+    return;
+  }
+}
+</script>

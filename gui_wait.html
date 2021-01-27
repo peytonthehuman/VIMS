@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<?!= include('gui_wait_CSS'); ?>
+<div id="variables">
+  <div id="container">
+    <div id="header">
+      <!-- Logo line here <img src="" > -->
+      <div id="title">
+        Vault Waitlist Form
+      </div>
+    </div>
+    <div id="main">
+      <div id="left">
+        <div id="buttons-left">
+          <div class="sectionhead">
+            Verify UID
+          </div>
+          <div class="entry">
+            Enter Your Name:<br>
+            <input type="text" id="empname">
+          </div>
+          <div class="split">
+            <div class="entry">
+              UID Entry:<br>
+              <input type="text" id="UID" onchange="checkedUID = false">
+            </div>
+            <div class="entry">
+              Category Entry:<br>
+              <select id="UIDCat" onchange="checkedUID = false">
+                <option>Please Wait...</option>
+              </select>
+            </div>
+          </div>
+          <div id="status-lights">
+            <div class="indicator" id="UIDInval">
+              Unit ID<br>Invalid
+            </div>
+            <div class="indicator" id="UIDNFSC">
+              Unit is<br>NFSC
+            </div>
+            <div class="indicator" id="UIDavail">
+              Unit is<br>Available
+            </div>
+          </div>
+          <div class="sectionhead">
+            Scan ID Card
+          </div>
+          <div class="entry">
+            Scan the Customer ID Card:<br>
+            <input type="text" class="entry" id="cardscan">
+          </div>
+        </div>
+        <div id="inforeturn">
+          <div class="sectionhead">
+            Enter Customer Info
+          </div>
+          <div class="entry">
+            Enter Customer Name:<br>
+            <input type="text" class="entry" id="cusname">
+          </div>
+          <div class="entry">
+            Enter Customer A Num:<br>
+            <input type="text" class="entry" id="cusanum">
+          </div>
+          <div class="entry">
+            Enter Customer Email:<br>
+            <input type="text" class="entry" id="cusemail">
+          </div>
+        </div>
+      </div>
+      <div id="right">
+        <div class="columns">
+          <button type="button" onclick="reset()">
+            Reset
+          </button>
+          <button type="button" onclick="launch(2)">
+            Check UID
+          </button>
+          <button type="button" onclick="autoFillFields()">
+            Auto Fill
+          </button>
+          <button type="button" onclick="launch(1)">
+            Debug
+          </button>
+          <button type="button" onclick="launch(0)">
+            Go!
+          </button>
+          <div class="entry">
+            <textarea id="console" cols="20" rows="7" readonly="true"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<?!= include('gui_wait_Java'); ?>

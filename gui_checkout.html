@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<?!= include('gui_checkout_Java'); ?>
+<?!= include('gui_checkout_CSS'); ?>
+</head>
+<body>
+<div id="variables">
+  <div id="container">
+    <div id="header">
+      <!-- Logo line here <img src="" > -->
+      <div id="title">
+        Vault Checkout Form
+      </div>
+    </div>
+    <div id="main">
+      <div id="left">
+        <div id="buttons-left">
+          <div class="sectionhead">
+            Verify UID
+          </div>
+          <div class="entry">
+            Enter Your Name:<br>
+            <input type="text" class="entry" id="empname">
+          </div>
+          <div class="entry">
+            Enter Unit ID:<br>
+            <input type="text" class="entry" id="uid" onchange="checkedUID = false">
+          </div>
+          <div id="status-lights">
+            <div class="indicator" id="UIDInval">
+              Unit ID Invalid
+            </div>
+            <div class="indicator" id="UIDOut">
+              Unit is Out
+            </div>
+            <div class="indicator" id="UIDRes">
+              Unit Reserved
+            </div>
+            <div class="indicator" id="UIDNFSC">
+              Unit is NFSC
+            </div>
+          </div>
+          <div class="sectionhead">
+            Scan ID Card
+          </div>
+          <div class="entry">
+            Scan the Customer ID Card:<br>
+            <input type="text" class="entry" id="cardscan">
+          </div>
+          <div class="sectionhead">
+            Enter Customer Info
+          </div>
+          <div class="entry">
+            Enter Customer Name:<br>
+            <input type="text" class="entry" id="cusname">
+          </div>
+          <div class="entry">
+            Enter Customer A Num:<br>
+            <input type="text" class="entry" id="cusanum">
+          </div>
+          <div class="entry">
+            Enter Customer Email:<br>
+            <input type="text" class="entry" id="cusemail">
+          </div>
+          <div class="entry">
+            Enter Customer Phone Num:<br>
+            <input type="text" class="entry" id="cuspnum">
+          </div>
+          <div class="sectionhead">
+            <br>Enter Additional Notes
+          </div>
+          <div class="entry">
+            <textarea id="notes" cols="45" rows="7" onfocus="clearText('')">Enter notes here...</textarea>
+          </div>
+          <div class="sectionhead">
+            <br>Enter Due-Date Option
+          </div>
+          <div class="entry">
+            2 Week Date<br>
+            <span class="dateentry">
+            <input type="radio" name="duedate" id="2weekdue" onclick="setDate(1)">
+            <input type="text" id="2wdpt1" readonly=true disabled=true> /
+            <input type="text" id="2wdpt2" readonly=true disabled=true> /
+            <input type="text" id="2wdpt3" readonly=true disabled=true>
+            </span>
+          </div>
+          <div class="entry">
+            End-of-Semester Date<br>
+            <span class="dateentry">
+            <input type="radio" name="duedate" id="maxdue" onclick="setDate(2)">
+            <input type="text" id="mdpt1" readonly=true disabled=true> /
+            <input type="text" id="mdpt2" readonly=true disabled=true> /
+            <input type="text" id="mdpt3" readonly=true disabled=true>
+            </span>
+          </div>
+          <div class="entry">
+            Custom Date<br>
+            <span class="dateentry">
+            <input type="radio" name="duedate" id="custdue" onclick="setDate(3)">
+            <input type="text" id="cdpt1" disabled=true> /
+            <input type="text" id="cdpt2" disabled=true> /
+            <input type="text" id="cdpt3" disabled=true>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div id="right">
+        <div class="columns">
+          <button type="button" onclick="reset()">
+            Reset
+          </button>
+          <button type="button" onclick="launch(2)">
+            Check UID
+          </button>
+          <button type="button" onclick="autoFillFields()">
+            Auto Fill
+          </button>
+          <button type="button" onclick="launch(1)">
+            Debug
+          </button>
+          <button type="button" onclick="launch(0)">
+            Go!
+          </button>
+          <div class="entry">
+            <textarea id="console" cols="45" rows="7" readonly="true"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

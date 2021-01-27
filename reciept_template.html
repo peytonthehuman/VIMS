@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+#container {
+	background-color: white;
+	margin: 10px;
+	border: 1px solid #BCC6CC;
+	min-width: 300px;
+}
+
+#header {
+	display: flex;
+	padding: 5px;
+	border-bottom: 3px solid black;
+}
+
+#logo-block {
+	padding: 0 10px;
+	border-right: 1px solid #BCC6CC;
+}
+
+#logo {
+	margin-top: 12px;
+	height: 30px;
+}
+
+#title {
+	padding: 16px 0 0 10px;
+	color: black;
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-weight: 500;
+	font-size: 21px;
+}
+
+#content {
+	width: 90%;
+	margin: 0 auto;
+	padding: 20px 0 10px 0;
+	font-family: Georgia, serif;
+	font-weight: 300;
+	font-size: 15px;
+	line-height: 135%;
+}
+
+#signature {
+	width: 90%;
+	margin: 0 auto;
+	border-top: 1px solid #BCC6CC;
+	font-family: Georgia, serif;
+	font-weight: 300;
+	font-size: 15px;
+	line-height: 135%;
+}
+
+#contact-block {
+	display: block;
+	padding: 0 0 10px 5px;
+}
+
+#contact {
+	font-weight: 100;
+	font-size: 12px;
+	line-height: 135%;
+}
+
+#footer {
+	width: 90%;
+	margin: 0 auto;
+	padding: 10px 5px;
+	color: #BCC6CC;
+	border-top: 1px solid #BCC6CC;
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-weight: 200;
+	font-size: 12px;
+	text-align: center;
+}
+</style>
+</head>
+<body>
+<div id="container">
+<div id="header">
+<span id="logo-block">
+<!-- Logo line here <img src="" > -->
+</span>
+<span id="title">
+<? /* if checkout */ if(data[1] && !data[2]) {?>
+Checkout Receipt
+<? } /* if checkin */ else if(data[1] && data[2]) {?>
+Check-in Receipt
+<? } /* must be late */ else if(!data[1] && !data[2]) { ?>
+Late Warning
+<? } /* Hold Warning */ else if(!data[1] && data[2]) { ?>
+Account Hold Notice
+<? } ?>
+</span>
+</div>
+<div id="content">
+<p>
+<?= data[0] /* Name */?>,
+</p>
+<? /* if checkout */ if(data[1] && !data[2]) {?>
+<p>
+This is an automated message from the Vault to confirm that your latest checkout 
+(which occurred on <?= data[3] /* date processed */ ?>) has been processed.
+</p>
+<p>
+<? if(data[7]) {?>
+Remember, you are required to check in the borrowed unit (ID: <?= data[5] /* UID */ ?>) 
+before <?= data[4] /* date due */ ?>. Failure to return the item by this time will result in warnings from the Vault, 
+and (after <b>one day</b> late) the holding of your grades until the item is returned or is replaced.
+<? } else {?>
+Remember, you are required to either check in or recheckout the borrowed unit (ID: <?= data[5] /* UID */ ?>) before <?= data[4] /* date due */ ?>. 
+Failure to return or renew checkout of the item by this time will result in warnings from the Vault
+, and (after 2 weeks late) the holding of your grades until the item is returned or is replaced.
+<? } ?>
+</p>
+<p>
+<? if(data[7]) {?>
+Please keep in mind that by checking out this item, you agree to be responsible for the care and maintenance of the item 
+and, if applicable, any equipment the item allows you to access while it is in your possession. Students will be held responsible 
+for any and all damages caused by negligence or mistreatment of the equipment while in the student’s possession, and will be expected 
+to pay for repair costs. Failure to return equipment (lost or stolen) or pay for necessary repairs will cause your grades to be held 
+and registration blocked until the equipment is returned or payment has been received in full.
+<? } else {?>
+Please keep in mind that by checking out equipment, you agree to be responsible for the care and maintenance of the item 
+while it is in your possession. Students will be held responsible for any and all damages caused by negligence or mistreatment 
+of the equipment while in the student’s possession, and will be expected to pay for repair costs. Failure to return equipment 
+(lost or stolen) or pay for necessary repairs will cause your grades to be held and registration blocked until the equipment 
+is returned or payment has been received in full.
+<? } ?>
+</p>
+<? } /* if checkin */ else if(data[1] && data[2]) {?>
+<p>
+This is an automated message from the Vault to confirm that your check in has been processed on 
+<?= data[3] /* date processed */ ?>. No further action is required of you at this time pending a final review of the item 
+to be completed when the Vault reopens. If the item is found to be damaged or missing accessories during that review, 
+you may be charged the cost to repair or replace.
+</p>
+<p>
+The ID of the checked in unit was <?= data[5] /* UID */ ?>.
+</p>
+<? } /* must be late */ else if(!data[1] && !data[2]) { ?>
+<p>
+This is an automated message from the Vault to remind you to return your checked-out items.
+The item, Unit ID: <?= data[5] /* UID */ ?>, was due on <?= data[4] /* date due */ ?>. 
+<? if(data[7]) {?>
+After the item is <b>one day</b> late, 
+<? } else {?>
+After the item is two weeks late, 
+<? } ?>
+your grades will be held until you return the item or replace it.
+</p>
+<p>
+<? if(!data[7]) { ?>
+Remember! You can re-checkout the item if you need more time with it and nobody else needs it. 
+Simply swing by the Vault and ask to re-checkout the item. Alternatively, you may reply to this email.
+<? } ?>
+</p>
+<? } /* Held Warning (ONE TIME) */ else if(!data[1] && data[2]) {?>
+<p>
+We are writing to inform you that due to 1) continued lateness in regards to item <?= data[5] /* UID */ ?>,
+2) the item being reported as lost or stolen, or 3) the item being returned broken, the Department of Art + Design 
+has, in accordance with Vault policy, placed a hold <? if(!(data[6] === "")) { ?>
+of value $<?= data[6].toFixed(2) /* unit value */ ?><? } ?> 
+on your account.
+</p>
+<p>
+This is the final email you will receive from the Vault in regards to this item. You will be unable to register for classes 
+or check out any other equipment from the Vault until you have returned, replaced, or paid for the item in question.
+</p>
+<? } ?>
+<p>
+If you have any questions<? if(!(!data[1] && data[2])) { ?>, or if you believe you received this email in error,
+<? } ?> feel free to respond to this email.
+</p>
+</div>
+<div id="signature">
+<p>
+Thank you for your time and attention,
+</p>
+<div id="contact-block">
+<p id="contact">
+Vault<br>Email: vault@email.com
+</p>
+</div>
+</div>
+<div id="footer">
+The Vault Inventory Management System was created by Peyton VanHook. &copy; 2017-<?= (new Date()).getFullYear() ?>
+</div>
+</div>
+</body>
+</html>

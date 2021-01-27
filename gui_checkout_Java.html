@@ -1,0 +1,409 @@
+<script>
+// This is the package that will be returned to the backend code when a checkout is submitted
+var package = ['','','','','','','','',false];
+/* empname, uid, cusname, cusanum, cusemail, cuspnum, date, notes, debug */
+
+// This is an array of DOM elements that represent the various form fields of the GUI.
+var inputElems = [];
+/* empname, uid, cusname, cusanum, cusemail, cuspnum, notes, cardscan */
+
+// This is an array of DOM elements that represent the various output elements.
+var outputElems = [];
+/* UIDInval, UIDOut, UIDRes */
+
+// This is an array of DOM elements that represent the date option radio buttons
+var dateRadios = [];
+/* 2weekdue, maxdue, custdue */
+
+// This variable is linked to the feedback console
+var custconsole;
+
+// The calculated "two weeks from now" value is saved here
+var TwoWeeks = new Date(0);
+
+// The entered maximum due date is saved here
+var maxDate = new Date(0);
+
+// This value is used by the program to make sure the user has checked the UID before registering a new checkout
+var checkedUID = false;
+
+// This value is used by the program to make sure the student is cleared to check out items.
+var studentValid = false;
+
+
+// This is the initialization function. It saves the appropriate values to each of the global variables.
+window.onload = function() {
+  inputElems.push(document.getElementById('empname'));
+  inputElems.push(document.getElementById('uid'));
+  inputElems.push(document.getElementById('cusname'));
+  inputElems.push(document.getElementById('cusanum'));
+  inputElems.push(document.getElementById('cusemail'));
+  inputElems.push(document.getElementById('cuspnum'));
+  inputElems.push(document.getElementById('notes'));
+  inputElems.push(document.getElementById('cardscan'));
+  
+  outputElems.push(document.getElementById('UIDInval'));
+  outputElems.push(document.getElementById('UIDOut'));
+  outputElems.push(document.getElementById('UIDRes'));
+  outputElems.push(document.getElementById('UIDNFSC'));
+  
+  dateRadios.push(document.getElementById('2weekdue'));
+  dateRadios.push(document.getElementById('maxdue'));
+  dateRadios.push(document.getElementById('custdue'));
+  
+  custconsole = document.getElementById('console');
+  
+  google.script.run.withSuccessHandler(maxDateSuccess).withFailureHandler(onFailure).getMaxDue();
+  google.script.run.withSuccessHandler(TwoWeekSuccess).withFailureHandler(onFailure).get2WeekDue();
+}
+
+// This function writes a new message to the feedback console
+async function custalert(msg) {
+  custconsole.value = msg;
+}
+
+// Success handler for the getMaxDueDate backend function
+// When the getMaxDueDate succesfully returns, this function sets the maxDate global variable to the appropriate date.
+// The line "maxDate.setHours(17)" specifies the specific hour in the day an item is due. If desired, the number 17 can be changed to any hour in the 24 hour clock.
+async function maxDateSuccess(retDate) {
+  console.log("Max: " + retDate);
+  maxDate = new Date(retDate);
+  maxDate.setDate(maxDate.getDate() + 1);
+  maxDate.setHours(17);
+  console.log("Max Date: " + maxDate);
+}
+
+// Success handler for the get2WeekDue backend function.
+// When the get2WeekDue function successfully returns, this function sets the global TwoWeeks variable to the appropriate date.
+// The line "TwoWeeks.setHours(17)" specifies the specific hour in the day an item is due. If desired, the number 17 can be changed to any hour in the 24 hour clock.
+async function TwoWeekSuccess(retDate) {
+  console.log("2 week: " + retDate);
+  TwoWeeks = new Date(retDate);
+  TwoWeeks.setHours(17);
+  console.log("2 week Date: " + TwoWeeks);
+}
+
+// Generic Failure Handler for external functions. An error report is logged to the browser console.
+async function onFailure(error) {
+  custalert("This program has encountered an error.\n\nPlease contact the supervisor immediately.");
+  console.error("Error: " + error.message + " at " + error.lineNumber);
+}
+
+// Success handler for whyNFSCUID backend function.
+// When the whyNFSCUID function returns successfully, this function writes the NFSC reason to the feedback console.
+// If the string is blank, the system writes a default value.
+// The language can be changed here if desired.
+async function getWhy(retWhy) {
+  var alertString = "The UID you've entered is not for student checkout.\nReason: ";
+  if(retWhy === "") {
+    alertString += "No reason given.";
+  } else {
+    alertString += retWhy;
+  }
+  alertString += "\nYou may proceed with the checkout only with faculty approval.";
+  custalert(alertString);
+}
+
+// Success handler for getNextOnList backend function, which returns the next person on the waiting list if the item is reserved.
+// Prints the waiter's information to the feedback console.
+async function getWho(retWho) {
+  var alertString = "Next on waitlist for this item (or category) is:";
+  alertString += "\nName: ";
+  alertString += retWho[0];
+  alertString += "\nAnum: ";
+  alertString += retWho[1];
+  alertString += "\nOnly check the item out if the person is the same as listed above, or with the supervisor's permission.";
+  custalert(alertString);
+}
+
+// Success handler when backend validateUID function returns.
+// This function determines, based on the return flag, what operation should be taken.
+// Case 0 indicates a successful verification, which is indicated in the feedback console and checkedUID is set to true.
+// Case 4 indicates NFSC, so the appropriate flag is toggled and the whyNFSCUID function is called. checkedUID is set to true to allow overriding. If this behavior should be changed, remove the line "checkedUID = true;".
+// Case 3 indicates the item is reserved, so the system calls the getNextOnList function to pull the next person on the waiting list for the particular item.
+// Case 2, which is handled by the else block, indicates the unit is out. The flag is set and the checkedUID is left false.
+// Case 1, which is handled by the else block, indicates the UID is invalid. The flag is set and the checkedUID is left false.
+async function UIDSuccess(retFlag) {
+  console.info(retFlag);
+  if(retFlag == 0) {
+    checkedUID = true;
+    custalert("No problems with UID. You may continue.");
+  } else if(retFlag == 4) {
+    setOut(true, retFlag - 1);
+    google.script.run.withSuccessHandler(getWhy).whyNFSCUID(inputElems[1].value);
+    checkedUID = true;
+  } else if(retFlag == 3) {
+    setOut(true, retFlag - 1);
+    google.script.run.withSuccessHandler(getWho).getNextOnList(inputElems[1].value);
+    checkedUID = true;
+  } else {
+    setOut(true, retFlag - 1);
+    checkedUID = false;
+  }
+}
+
+// This function is the success handler for the checkRecord function, which indicates to the user if the student is allowed to checkout.
+// In each case, the line "studentValid = true;" should be added at the end of the block to allow students to check out in particular cases.
+// Additionally, the language can be reconfigured if desired.
+async function validSuccess(retPackage) {
+  // Can they check out?
+  if(retPackage[5]) {
+    custalert("This student may not check out any new items from the Vault without permission from the supervisor. They may contact the supervisor if they have any questions.");
+  } else if(retPackage[4]) {
+    custalert("The student cannot check out any new items because their account is held.");
+  }
+  else if(retPackage[3]!=0) {
+    var alertString = "The student cannot check out any new items because they have ";
+    alertString += retPackage[3];
+    alertString += " items late.";
+  	custalert(alertString);
+  }
+  else {
+    custalert("The student is allowed to check out items. Please press \"Go\" again to continue with the checkout.");
+    studentValid = true;
+  }
+}
+
+// Final success handler run after a checkout has been successfully registered. The studentValid and checkedUID flags are reset.
+// If desired, the language can be changed.
+async function outSuccess() {
+  custalert("Checkout successful. Please remind the customer of the due date and inform them that a reciept email has been sent.");
+  studentValid = false;
+  checkedUID = false;
+}
+
+// This function does a regular expression check on an input value based on the provided type
+// ANO indicates that the value should be a valid ID Number, and the pattern is based off the expected A Number pattern. If this pattern is ever changed, this check will need to be changed.
+// PHO indicates phone number. The pattern provided checks for the format (###) ###-####.
+// CSR indicates a card scan. However, more recent cards have not followed this pattern, so this may need to be changed.
+function checkRegex(value, type) {
+  if(type == 'ANO') {
+    return /\d{8}/.test(value);
+  } else if(type == 'PHO') {
+    return /\(\d{3}\)\ \d{3}\-\d{4}/.test(value);
+  } else if(type == 'CSR') {
+    return;
+  }
+  return false;
+}
+
+// This is the function that is run when the "Go!", "Debug", and "Check UID" buttons are pressed. 
+// When debug is pressed, the debug flag in the package variable is set to true. Then the procedure run for Go is run.
+// When Go is pressed, the function follows the code under case 0. The language used for feedback can be changed.
+//   This code makes sure the proper checks have been performed and copies the necessary information from the form to the 
+// When Check UID is pressed, the code under case 2 is run.
+function launch(inValue) {
+	switch(inValue) {
+  	case 1:
+    	package[8] = true;
+    case 0:
+      // Check if UID has been validated
+      if(!checkedUID) {
+        custalert("You must validate a Unit ID before submitting this form.");
+        break;
+      }
+      // check if everything is filled
+      for(var i = 0; i < 6; i++) {
+        if(!inputElems[i].value) {
+          custalert("Input Element " + (i + 1) + " is empty! Please make sure all required elements are filled.");
+          return;
+        }
+        if(i == 3) {
+          if(!checkRegex(inputElems[i].value, 'ANO')) {
+            custalert("Inputed A# Number is not valid! Please make sure to enter A# Numbers as: \"########\"");
+            return;
+          }
+        }
+        if(i == 5) {
+          if(!checkRegex(inputElems[i].value, 'PHO')) {
+            custalert("Inputed Phone Number is not valid! Please make sure to enter Phone Numbers as: \"(###) ###-####\"");
+            return;
+          }
+        }
+        package[i] = inputElems[i].value;
+      }
+      
+      var tempDate = readDate();
+      if(tempDate.getFullYear() < (new Date()).getFullYear()) {
+        custalert("You must choose a date before submitting!");
+        break;
+      }
+      
+      package[6] = tempDate.getFullYear() + "/" + (tempDate.getMonth() + 1) + "/" + tempDate.getDate();
+      if(inputElems[6].value && inputElems[6].value !== "Enter notes here...") {
+        package[7] = inputElems[6].value;
+      }
+      
+      // if is call main function
+      console.info(package);
+      if(!studentValid) {
+        custconsole.value = "";
+        google.script.run.withSuccessHandler(validSuccess).withFailureHandler(onFailure).checkRecord([package[2], package[3]]);
+      }
+      if(studentValid || package[8] == true) {
+        package[8] = false;
+        google.script.run.withSuccessHandler(outSuccess).withFailureHandler(onFailure).makeNewCheckout(package);
+      }
+      
+      package[8] = false;
+      break;
+    case 2:
+      resetLights();
+      google.script.run.withSuccessHandler(UIDSuccess).withFailureHandler(onFailure).validateUID(inputElems[1].value, false);
+      break;
+  }
+}
+
+// This function "turns on" or "turns off" the indicator lights on the gui form.
+// Only thing that can really be changed here are the colors
+function setOut(to, index) {
+	if(to) {
+  	outputElems[index].style.backgroundColor = '#ffc535';
+		outputElems[index].style.color = 'white';
+  } else {
+  	outputElems[index].style.backgroundColor = 'white';
+		outputElems[index].style.color = 'black';
+  }
+}
+
+// This function handles the enabling or disabling of the date options when the user clicks on the radio buttons
+// When a user clicks on two weeks or max date, the system automatically populates the text fields with the appropriate date
+// Nothing much should be changed here.
+function date(to,index) {
+	if(to) {
+  	switch(index) {
+    case 1:
+      document.getElementById('2wdpt1').disabled=false;
+      document.getElementById('2wdpt1').value=TwoWeeks.getMonth() + 1;
+      document.getElementById('2wdpt2').disabled=false;
+      document.getElementById('2wdpt2').value=TwoWeeks.getDate();
+      document.getElementById('2wdpt3').disabled=false;
+      document.getElementById('2wdpt3').value=TwoWeeks.getFullYear();
+      break;
+    case 2:
+      document.getElementById('mdpt1').disabled=false;
+      document.getElementById('mdpt1').value=maxDate.getMonth() + 1;
+      document.getElementById('mdpt2').disabled=false;
+      document.getElementById('mdpt2').value=maxDate.getDate();
+      document.getElementById('mdpt3').disabled=false;
+      document.getElementById('mdpt3').value=maxDate.getFullYear();
+      break;
+    case 3:
+      document.getElementById('cdpt1').disabled=false;
+      document.getElementById('cdpt2').disabled=false;
+      document.getElementById('cdpt3').disabled=false;
+      break;
+    }
+  }
+  else {
+  	switch(index) {
+    case 1:
+    	document.getElementById('2wdpt1').disabled=true;
+      document.getElementById('2wdpt1').value='';
+      document.getElementById('2wdpt2').disabled=true;
+      document.getElementById('2wdpt2').value='';
+      document.getElementById('2wdpt3').disabled=true;
+      document.getElementById('2wdpt3').value='';
+      break;
+    case 2:
+    	document.getElementById('mdpt1').disabled=true;
+      document.getElementById('mdpt1').value='';
+      document.getElementById('mdpt2').disabled=true;
+      document.getElementById('mdpt2').value='';
+      document.getElementById('mdpt3').disabled=true;
+      document.getElementById('mdpt3').value='';
+      break;
+    case 3:
+    	document.getElementById('cdpt1').disabled=true;
+      document.getElementById('cdpt1').value='';
+      document.getElementById('cdpt2').disabled=true;
+      document.getElementById('cdpt2').value='';
+      document.getElementById('cdpt3').disabled=true;
+      document.getElementById('cdpt3').value='';
+      break;
+    }
+  }
+}
+
+// This function figures out which date should be read based on the date option and returns it.
+// Nothing really should be changed here.
+function readDate() {
+  var active = 0;
+  var retVal;
+  for(active = 0; active < 3; active++) {
+  	if(dateRadios[active].checked) {
+    	break;
+    }
+  }
+  if(active == 3) {
+  	retVal = new Date (0);
+  } else {
+  	switch(active) {
+    case 0:
+      retVal = TwoWeeks;
+      break;
+    case 1:
+      retVal = maxDate;
+      break;
+    case 2:
+      retVal = new Date(
+      document.getElementById('cdpt3').value,
+      document.getElementById('cdpt1').value - 1,
+      document.getElementById('cdpt2').value);
+      break;
+    }
+  }
+  return retVal;
+}
+
+// This function sets the input date option index to active, and sets the others to inactive.
+// Nothing should be changed here.
+function setDate(index) {
+	var i = 0;
+  for(i = 0; i < 3; i++) {
+  	date(false,i);
+  }
+  date(true,index);
+}
+
+// This function resets the indicator lights.
+// Nothing really should be changed here.
+function resetLights() {
+  for(var i = 0; i < outputElems.length; i++) {
+  	setOut(false,i);
+  }
+}
+
+// This function resets the entire form, and is called by the reset button.
+// The only thing that can be chagned is the text in the clearText function call.
+function reset() {
+  checkedUID = false;
+  var i = 0;
+  for(i = 1; i < 8; i++) {
+  	inputElems[i].value = '';
+  }
+  resetLights();
+  for(i = 0; i < 3; i++) {
+  	dateRadios[i].checked=false;
+  	date(false,i);
+  }
+  clearText("Enter notes here...");
+  custconsole.value = "";
+}
+
+// This function sets the notes field to an input string. This way the reset button resets the notes field.
+// Nothing should be changed here.
+function clearText(to) {
+	inputElems[6].value = to;
+}
+
+// This function scans the value returned by the card reader and attempts to write the determined values to the form
+function autoFillFields() {
+  var raw = inputElems[7].value;
+  if(checkRegex(raw, "CSR")==false) {
+    custalert("The scanned ID card is not in a recognized format. Please contact Peyton.");
+  } else {
+    return;
+  }
+}
+</script>
